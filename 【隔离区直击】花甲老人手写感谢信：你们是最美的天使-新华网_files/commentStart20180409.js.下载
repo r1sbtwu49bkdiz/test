@@ -1,0 +1,526 @@
+! function() {
+    var vlog = {
+        logStatus: false, //登陆状态
+        userInfo: null, //用户信息
+        doms: null, //缓存的dom
+        submitTips: '发表成功，等待审核！', //提示
+        userId: "", //uid
+        url: {
+            toLike: "http://comment.home.news.cn/a/commentUp.do?", //点赞
+            commentContForm: "http://comment.home.news.cn/a/adComment.do", //发送评论
+            report: "http://comment.home.news.cn/a/addReportAction.do?", //举报
+            headpics: "http://tpic.home.news.cn/userIcon/s/" //随机头像
+        },
+        dom: function() {
+            var t = this;
+            return {
+                container: $("#da-comment"),
+                commentListBox: $(".dc-list"), //评论列表
+                showMoreBtn: $(".xh-comment-status"), //显示更多
+                mainForm: $(".xh-comment-form"), //主评论整套
+                box: $(".do-editor"), //主评论框
+                loginBox: $(".de-login"), //主评论框-登陆注册按钮组
+                sendBtn: $(".do-user"), //主评论框-发表按钮
+                txt: $(".dei-text"), //主评论框- textareaa + placeholder
+                txtTip: $(".dei-text").find(".textplaceholder-tip"), //主评论框-placeholder
+                txtArea: $(".dei-text").find("textarea"), //主评论框- textarea
+                userName: $(".dh-nick").find("a"), //主评论框 - 用户名：第一个a标签
+                img: $(".dep-entity"), //主评论框 - 头像
+                logOff: $(".de-logout"), //主评论框 - 注销按钮
+
+                subBox: $(".dst-editor"), //回复- box
+                subLoginBox: $(".dst-editor").find(".dst-login"), //回复 - 登陆注册按钮组
+                subSendMsgBtn: $(".dst-user"), //回复- 发表按钮
+                subTxt: $(".dst-text"), //回复 - textarea + placeholder
+                subTxtTip: $(".dst-text").find(".textplaceholder-tip"), //回复-placeholder
+                subTxtArea: $(".dst-text").find("textarea"), //回复 - textarea
+                subUserName: $(".dst-nick").find(".dst-status"), //回复 - 用户名
+                subImg: $(".dst-editor").find(".dst-entity"), //回复 - 头像box
+
+                replyParentId: $(".ds-talk input[name=parentId]")
+            }
+        },
+        headpic: function(num) {
+            var t = this
+
+            ;
+            t.subImg.html("<img src=" + t.url.headpics + (new Date() - 0) + " />");
+        },
+        logfail: function() {
+            var t = this
+
+            ;
+            t.doms = t.dom();
+
+            //主评论框
+
+            t.doms.txt.on("click", function() {
+                t.doms.txtTip.hide();
+                t.doms.txtArea.focus();
+            });
+            t.doms.txtArea.on("blur", function() {
+                var _val = $.trim($(this).val());
+                if (!!_val) return;
+                t.doms.txtTip.show();
+            });
+        },
+        logon: function() {
+            var t = this
+
+            ;
+            t.doms = t.dom();
+
+            t.logStatus = true;
+            //主评论框
+            t.doms.loginBox.hide();
+            t.doms.sendBtn.show();
+            t.doms.logOff.show();
+            t.doms.img.html("<img src=" + "http://tpic.home.news.cn/userIcon/s/" + (new Date() - 0) + " />");
+            t.doms.userName.html("");
+            //console.log(t.doms);
+            t.doms.txt.on("click", function() {
+                t.doms.txtTip.hide();
+                t.doms.txtArea.focus();
+                //console.log("????");
+            });
+            t.doms.txtArea.on("blur", function() {
+                var _val = $.trim($(this).val());
+                //console.log(_val, (!_val));
+                if (!!_val) return;
+                t.doms.txtTip.show();
+            });
+            t.doms.logOff.one("click", function() {
+                t.logOut();
+            });
+        },
+        userOn: function(info) {
+            var t = this
+
+            ;
+            t.doms = t.dom();
+
+            t.userInfo = info;
+            t.userId = t.userInfo.uid;
+            t.doms.img.html("<img src=" + info.headpicture + " />");
+            t.doms.userName.html(info.nickname);
+            // t.doms.logoff.show();
+        },
+        logOut: function() {
+            var t = this
+
+            ;
+            t.doms = t.dom();
+
+            function reSetDom() {
+                t.logStatus = false;
+                t.doms.img.html("");
+                t.doms.logOff.hide();
+                t.doms.userName.html("");
+                t.doms.loginBox.show();
+                t.doms.sendBtn.hide();
+                t.rendersReply();
+            }
+
+            reSetDom();
+
+            idm.user.logout({
+                success: function() {
+                    reSetDom();
+                    // //console.log(t);
+                    // t.rendersReply();
+                    /*t.doms.subSendMsgBtn.hide();
+                    t.doms.subLoginBox.show();
+                    t.doms.subImg.html("");
+                    t.doms.subUserName.html("您还未登录");*/
+                },
+                fail: function(r) {
+
+                }
+            })
+
+        },
+        rendersReply: function(btn) {
+            //回复
+            var t = this,
+                _btn = btn;
+            setTimeout(function() {
+                t.doms = t.dom();
+                //console.log(t, t.userInfo, t.logStatus);
+                // //console.log(_btn.attr("data-id"));
+                t.doms.replyParentId.attr("value", (_btn ? _btn.attr("data-id") : ""));
+                if (t.logStatus) {
+                    //登陆状态
+                    t.doms.subLoginBox.hide();
+                    t.doms.subSendMsgBtn.show();
+                    t.doms.subUserName.html(t.userInfo.nickname || "");
+                    t.doms.subImg.html("<img src=" + t.userInfo.headpicture + " />")
+                } else {
+                    //注销状态
+                    t.doms.subLoginBox.show();
+                    t.doms.subSendMsgBtn.hide();
+                    t.doms.subUserName.html("您还未登录");
+                    // t.doms.subImg.html("<img src="+ "http://tpic.home.news.cn/userIcon/s/" + (new Date() - 0) +" />")
+                }
+                t.textareaClick(t);
+            }, 20)
+        },
+        textareaClick: function(t) {
+            var t = this;
+            t.doms.subTxt.on("click", function() {
+                t.doms.subTxtTip.hide();
+                t.doms.subTxtArea.focus();
+            });
+            t.doms.subTxtArea.on("blur", function() {
+                var _val = $.trim($(this).val());
+                if (!!_val) return;
+                t.doms.subTxtTip.show();
+            })
+        },
+        renderSubFuns: function(info) {
+            var t = this
+
+            ;
+
+            t.doms = t.dom();
+
+            function doSubmit(_that) {
+                var _form = _that.parents("form"),
+                    _txtArea = _form.find("textarea"),
+                    _txt = $.trim(_txtArea.val());
+                if (!_txt) {
+                    _txtArea.addClass("bg-red");
+                    setTimeout(function() {
+                        _txtArea.removeClass("bg-red");
+                    }, 200);
+                    return;
+                }
+
+                function toSubmit(form) {
+                    var _form = form;
+                    //console.log(_form);
+                    window.alert(t.submitTips);
+                    _form.submit();
+                    // alert("asdasdasdasdasdasd");
+                }
+                toSubmit.call(t, _form);
+            }
+
+            function doLike(_that) {
+                //点赞
+                window.vlog.doLike.call(t, _that);
+            }
+
+            function doReport(btn) {
+                //举报
+                var t = this,
+                    _btn = btn,
+                    _body = document.querySelector("body"),
+                    commentReportBox = document.createElement("div"),
+                    commentId = _btn.attr("data-cid") || "",
+                    reportUserId = t.userId || "", //举报人id
+                    commUserId = _btn.attr("data-uid") || "", //留言人id
+                    reportContent = _btn.attr("data-cont") || "",
+                    commentName = _btn.attr("data-uname") || "",
+                    reportType = 0,
+                    commentReportBoxWidth = 0,
+                    commentReportBoxHeight = 0,
+                    str = '<!-- 举报框 --><div class="header"><div class="title">用户举报</div><div class="close"></div></div><div class="article"><div class="image"><div>&nbsp;</div></div><div class="info"><div class="i-title">感谢您的举报，新华安全中心将在调查取证后，对举报内容进行处理。</div><div class="i-user">您举报的是<span>' + commentName + '</span>：</div><div class="i-text">' + reportContent + '</div></div><div class="type"><div class="t-title">请选择举报的类型<em>(必选)</em>：</div><div class="t-type"><form><table><tbody><tr><td>' +
+                    '<label><input value="1" name="reportType" type="radio">色情</label></td><td>' +
+                    '<label><input value="2" name="reportType" type="radio">广告</label></td><td>' +
+                    '<label><input value="3" name="reportType" type="radio">假冒身份</label></td></tr><tr><td>' +
+                    '<label><input value="4" name="reportType" type="radio">政治</label></td><td>' +
+                    '<label><input value="5" name="reportType" type="radio">骚扰</label></td><td>' +
+                    '<label><input value="0" name="reportType" type="radio" checked>其他</label></td></tr></tbody></table></form>' +
+                    '</div></div><div class="more"><div class="m-title">您可以填写更多举报说明：<em></em></div><div class="m-text"><textarea></textarea></div></div><div class="btn"><input value="确定" class="submit" type="button">&nbsp;&nbsp;&nbsp;<input value="取消" class="cancel" type="button"></div></div>';
+
+                if (!t.logStatus) {
+                    alert("请先登录！");
+                    return;
+                }
+
+                commentReportBox.setAttribute("class", "comment-dialog zh report-dialog");
+                // commentReportBox.setAttribute("style", "display: block; position: fixed; left: 112.5px; top: 137px;");
+                // commentReportBox.style
+                commentReportBox.innerHTML = str;
+
+                _body.appendChild(commentReportBox);
+                commentReportBoxWidth = commentReportBox.clientWidth;
+                commentReportBoxHeight = commentReportBox.clientHeight;
+                commentReportBox.style.marginLeft = -commentReportBoxWidth / 2 + "px";
+                commentReportBox.style.marginTop = -commentReportBoxHeight / 2 + "px";
+
+                $(".report-dialog input[type=radio]").on("click", function() {
+                    reportType = $(this).attr("value");
+                })
+                $(".report-dialog .submit").one("click", function() {
+                    var cid = commentId,
+                        r_uid = reportUserId,
+                        cuid = commUserId,
+                        rt = reportType,
+                        rc = reportContent,
+                        addTxt = $(".report-dialog .m-text").find("textarea").val(),
+                        url = window.vlog.url.report + "commentId=" + cid + "&reportUserId=" + r_uid + "&commUserId=" + cuid + "&reportType=" + rt + "&reportContent=" + addTxt;
+                    //console.log(url);
+                    // return;
+                    $.ajax({
+                        url: url,
+                        type: "get",
+                        dataType: "jsonp",
+                        success: function(d) {
+                            //console.log(d);
+                            alert(d.description);
+                            $(".report-dialog .close").trigger("click");
+                        }
+                    })
+
+                });
+
+                $(".report-dialog .close").one("click", function() {
+                    _body.removeChild(commentReportBox);
+                });
+
+                $(".report-dialog .cancel").one("click", function() {
+                    $(".report-dialog .close").trigger("click");
+                });
+            }
+
+
+            t.doms.container.on("click", ".reply,.submit,.ding,.report", function(event) {
+                /*window.aaa=$(this);
+                //console.log($(this),event)*/
+                var _t = t,
+                    types = $(this).attr("class");
+                // //console.log(_t);
+
+                if (types.indexOf("reply") !== -1) {
+                    //console.log("reply");
+                    t.rendersReply($(this));
+
+                } else if (types.indexOf("submit") !== -1) {
+                    //console.log("submit");
+                    doSubmit.call(t, $(this));
+
+                } else if (types.indexOf("ding") !== -1) {
+                    //console.log("ding");
+                    doLike.call(t, $(this));
+                } else if (types.indexOf("report") !== -1) {
+                    //console.log("report", t.logStatus);
+                    doReport.call(t, $(this));
+                }
+                // 
+            })
+
+        },
+        doLike: function(_that) {
+            var t = this,
+                _this = _that,
+                commentId = _this.attr("data-cid") || 111,
+                newsId = _this.attr("data-newsid") || "1-110";
+
+            if (!t.logStatus) {
+                alert("请先登录！");
+                return;
+            }
+            $.ajax({
+                type: "get",
+                url: window.vlog.url.toLike + "commentId=" + commentId + "&newsId=" + newsId,
+                dataType: "jsonp",
+                success: function(d) {
+                    var str = _this.html(),
+                        num = d.content;
+                    //console.log(str);
+                    str = str.replace(/>(((\d|\s){0,})|((\s|\d){0,})})</ig, (">" + num + "<"))
+                    _this.html(str);
+                }
+            })
+        },
+        calcTime: function(date) {
+            var t = this,
+                d = data || (new Date() - 0);
+
+
+        }
+    }
+
+    window.vlog = vlog;
+}()
+
+//------------------------------------
+
+! function(mainFn) {
+    var outerBox = $("#news-com"),
+        commentBox = document.querySelector("#da-comment"),
+        winHref = window.location.href,
+        dataSiteId = commentBox.getAttribute("data-siteId") || "1",
+        newsId = (winHref.match(/\d{8,}/ig)[0] || "") || 1000,
+        optUrl = dataSiteId + "-" + newsId,
+        cb = mainFn || null;
+    //console.log(newsId);
+    // newsId = 1120959353;
+    optUrl = dataSiteId + "-" + newsId;
+
+    $.ajax({
+        url: "http://comment.home.news.cn/a/newsInfo.do?newsId=" + optUrl,
+        type: "get",
+        dataType: "jsonp",
+        success: function(d) {
+            //console.log(d);
+            /*
+            d.commentFlag:
+            0 新闻关闭
+            1 只能评论不能看
+            2 只能看不能评论
+            3 能看能评
+
+            */
+            // //console.log(111111);
+            var opts = {
+                container: commentBox,
+                href: winHref,
+                dsid: dataSiteId,
+                nid: newsId,
+                ourl: optUrl
+            };
+
+            window.vlog.commentFlag = d.commentFlag;
+
+            // d.commentFlag=0;
+
+            if (d.commentFlag == 0) {
+                // commentBox.style.display="none";
+                outerBox.hide();
+                return;
+            };
+
+
+
+            commentBox.style.display = "block";
+            cb && cb(opts);
+        }
+    })
+}(function(opt) {
+    var _opt = opt || {},
+        commentBox = _opt.container || document.querySelector("#da-comment"),
+        winHref = _opt.href || window.location.href,
+        dataSiteId = _opt.dsid || commentBox.getAttribute("data-siteId") || "1",
+        newsId = _opt.nid || (winHref.match(/\d{8,}/ig)[0] || "") || 1000,
+        isLogin = false;
+
+    //if (newsId.length < 3) return;
+
+    // newsId = 1120959353;
+    commentBox.setAttribute("data-newsId", newsId);
+
+    var xhcomment = new XHW.XhComment({
+        container: "#da-comment",
+        debug: true,
+        listMore: true,
+        commentSize: 3,
+        url: {
+            login: "http://user.news.cn/sso/login?servicecode=xhxwpl&gourl=" + window.location.href,
+            reg: "http://user.news.cn/user/reg?servicecode=xhxwpl&gourl=" + window.location.href
+        },
+        elClass: {
+            list: "dc-list",
+            replyBtn: "reply",
+            listItem: "dl-section dl",
+            replay: "ds-talk",
+            replySubmit: "dst-user input",
+            commentSubmit: "submit"
+        },
+        language: {
+            moreTip: "显示更多评论"
+        },
+        template: {
+            listItem: '<div class="dl-section"><dl class="clearfix t-2"><dt><div class="ds-pic"><a href="http://{{userName}}.home.news.cn/" target="_blank"><img src="{{userImgUrl}}"></a></div><div class="ds-watch"><a href="javascript:;" data-watch="{{userName}}"><strong>+</strong>关注</a></div></dt><dd><h3 class="ds-nick"><a href="http://{{userName}}.home.news.cn/" target="_blank">{{nickName}}</a>&nbsp;<em>[{{ipInfo}} <a href="http://www.xinhuanet.com/" target="_blank"></a>]</em>：<em class="ds-time" data-timestamp="{{commentTime}}">{{commentTime}} 发表</em></h3><p class="ds-text"><em class="ds-content">{{content}}</em></p><h4 class="ds-ctrl"><a href="javascript:;" class="ding" data-cid="{{commentId}}" data-uid="{{userName}}" data-newsid="{{newsId}}">顶<span>(<em>{{upAmount}}</em>)</span></a><a href="javascript:;" class="reply" data-id="{{commentId}}">回复</a><a href="javascript:;" class="copy">复制</a><a href="javascript:;" class="report" data-cid="{{commentId}}" data-uid="{{userId}}" data-uname="{{nickName}}" data-cont="{{content}}">举报</a></h4></dd></dl><div class="line-break-dashed t-2">&nbsp;</div></div>',
+            replyBtn: '<div class="ds-talk clearfix"><form action="' + window.vlog.url.commentContForm + '" method="POST"><input type="hidden" name="sourceId" value="' + dataSiteId + '"><input type="hidden" name="type" value="' + dataSiteId + '"><input type="hidden" name="rurl" value="' + window.location.href + '"><input type="hidden" name="parentId" value="{{commentId}}"><input type="hidden" name="newsId" value="' + (dataSiteId + "-" + newsId) +
+                '"><div class="dst-editor clearfix"><div class="dst-pic"><div class="dst-entity"></div><div class="dst-login  dst-show"><a href="' + "http://user.news.cn/sso/login?servicecode=xhxwpl&gourl=" + window.location.href + '">登录</a><a href="' + "http://user.news.cn/user/reg?servicecode=xhxwpl&gourl=" + window.location.href + '" target="_blank">注册</a></div><div class="dst-logout dst-hide"><a href="javascript:;">注销</a></div></div><div class="dst-input clearfix"><div class="dst-head clearfix"><div class="dst-nick"><a href="javascript:;" target="_blank"></a><span class="dst-status  dst-show">您还未登录</span><span class="dst-input-tip">&nbsp;</span></div></div><div class="dst-text textplaceholder"><div class="textplaceholder-tip">您的观点仅代表您本人，请文明发言，严禁散播谣言和诽谤他人</div><textarea data-id="{{commentId}}" name="content"></textarea></div><div class="dst-arrow">&nbsp;</div></div></div><div class="break-12">&nbsp;</div><div class="dst-share"><label><input type="button" value="" class="checkbox checkbox-checked" data-check-index="0" data-checked="checked"><input type="checkbox" value="' + dataSiteId + '" checked="checked" class="js-reply_9334_1522547712285-share" name="shareToWb" style="display: none;">新华微博</label></div><div class="dst-user clearfix"><div class="tip"></div><div class="submit"><input value="马上发表" type="button"></div></div></form></div>',
+            reply: '<dd class="ds-talk clearfix"><form action="' + window.vlog.url.commentContForm + '" method="POST" target=""><input type="hidden" name="sourceId" value="' + dataSiteId + '"><input type="hidden" name="type" value="' + dataSiteId + '"><input type="hidden" name="rurl" value="' + window.location.href + '"><input type="hidden" name="parentId" value="{{commentId}}"><input type="hidden" name="newsId" value="' + (dataSiteId + "-" + newsId) + '"><div class="dst-editor clearfix"><div class="dst-pic"><div class="dst-entity"></div><div class="dst-login  dst-show"><a href="' + "http://user.news.cn/sso/login?servicecode=xhxwpl&gourl=" + window.location.href + '">登录</a><a href="' + "http://user.news.cn/user/reg?servicecode=xhxwpl&gourl=" + window.location.href + '" target="_blank">注册</a></div><div class="dst-logout  dst-hide "><a href="javascript:;">注销</a></div></div><div class="dst-input clearfix"><div class="dst-head clearfix"><div class="dst-nick"><a href="javascript:;" target="_blank"></a><span class="dst-status dst-show">您还未登录</span><span class="dst-input-tip">&nbsp;</span></div></div><div class="dst-text textplaceholder"><div class="textplaceholder-tip">您的观点仅代表您本人，请文明发言，严禁散播谣言和诽谤他人</div><textarea data-id="{{commentId}}" name="content"></textarea></div><div class="dst-arrow">&nbsp;</div></div></div><div class="break-12">&nbsp;</div><div class="dst-share"><label><input type="button" value="" class="checkbox checkbox-checked" data-check-index="0" data-checked="checked"><input type="checkbox" value="' + dataSiteId + '" checked="checked" class="js-reply_9334_1522547712285-share" name="shareToWb" style="display: none;">新华微博</label></div><div class="dst-user clearfix"><div class="tip"></div><div class="submit"><input value="马上发表" type="button"></div></div></form></dd>',
+            form: '<div id="" class="dc-pub"><div id="" class="dp-operate"><form id="" action="' + window.vlog.url.commentContForm + '" method="POST"><input type="hidden" name="sourceId" value="' + dataSiteId + '"><input type="hidden" name="type" value="' + dataSiteId + '" id=""><input type="hidden" name="rurl" value="' + window.location.href + '" id=""><input type="hidden" name="parentId" value="-1"><input type="hidden" name="newsId" value="' + (dataSiteId + "-" + newsId) + '" id=""><div class="do-editor clearfix"><div class="de-pic"><div class="dep-entity"></div><div class="de-login"><a href="' + "http://user.news.cn/sso/login?servicecode=xhxwpl&gourl=" + window.location.href + '">登录</a><a href="' + "http://user.news.cn/user/reg?servicecode=xhxwpl&gourl=" + window.location.href + '" target="_blank">注册</a></div><div class="de-logout" style="display: none;"><a href="javascript:;">注销</a></div></div><div class="de-input clearfix"><div class="dei-head clearfix"><div class="dh-nick"><a href="javascript:;" target="_blank"></a><span class="dhn-status" style="visibility: visible;"></span><span class="dhn-tip" >&nbsp;</span></div></div><div class="dei-text textplaceholder"><div class="textplaceholder-tip">您的观点仅代表您本人，请文明发言，严禁散播谣言和诽谤他人</div><textarea name="content"></textarea></div><div class="de-arrow">&nbsp;</div></div></div><div class="break-12">&nbsp;</div><div class="submit-tip"></div><div class="do-share"><input type="button" value="" class="checkbox" data-check-index="0" data-checked=""><input type="checkbox" value="' + dataSiteId + '" class="js-JFO_REMOTE_72596_1522409633572-share" name="shareToWb" style="display: none;">新华微博</div><div class="do-user clearfix" style="display: none;"><div class="tip"></div><div class="submit"><input type="button" value="快速发表" ></div></div></form></div></div>'
+        },
+        onInit: function() {
+            // //console.log("oninit: ",this.checkLogin());
+            // window.vlog.logon();
+            window.vlog.renderSubFuns();
+            // window.vlog.doSubmit();
+            var s = document.createElement("script"),
+                b = document.querySelector("body");
+            s.src = "http://www.newsres.cn/comment20180410/idm.js";
+            b.appendChild(s);
+            //console.log("comment init");
+
+
+        },
+        onRenderListAfter: function(data, item) {
+            /*//console.log("onRenderListAfter");
+            //用totalRows
+            $(".xh-comment-status").one("click",function(){
+                var times=($(this).attr("data-clicktimes")-0)||0
+                ;
+                if(times<2){
+                    times++;
+                    $(this).attr("data-clicktimes",times);
+                }else{
+                    $(this).addClass("no-evt");
+                    window.open("http://127.0.0.1");
+                }
+                //console.log(times);
+            })*/
+
+            // //console.log("渲染列表后登陆状态： ",isLogin)
+
+            /*
+
+            0 新闻关闭
+            1 只能评论不能看
+            2 只能看不能评论
+            3 能看能评
+            */
+            var showStatus = window.vlog.commentFlag;
+            //console.log("afterRenderList: ", vlog);
+            if (showStatus == 1) {
+                window.vlog.doms.commentListBox.hide();
+                window.vlog.doms.showMoreBtn.hide();
+            } else if (showStatus == 2) {
+                window.vlog.doms.mainForm.hide();
+                window.vlog.doms.container.css({
+                    "padding-top": 0
+                });
+            };
+            var dateDiff = function(hisTime, nowTime) {
+                // hisTime = new Date(hisTime.replace(/-/g, "/")).getTime();
+                hisTime = new Date(hisTime-0).getTime();
+                var now = nowTime ? nowTime : new Date().getTime(),
+                    diffValue = now - hisTime,
+                    result = '',
+                    minute = 1000 * 60,
+                    hour = minute * 60,
+                    day = hour * 24,
+                    halfamonth = day * 15,
+                    month = day * 30,
+                    year = month * 12,
+                    _year = diffValue / year,
+                    _month = diffValue / month,
+                    _week = diffValue / (7 * day),
+                    _day = diffValue / day,
+                    _hour = diffValue / hour,
+                    _min = diffValue / minute;
+                if (_year >= 1) result = parseInt(_year) + "年前";
+                else if (_month >= 1) result = parseInt(_month) + "个月前";
+                else if (_week >= 1) result = parseInt(_week) + "周前";
+                else if (_day >= 1) result = parseInt(_day) + "天前";
+                else if (_hour >= 1) result = parseInt(_hour) + "个小时前";
+                else if (_min >= 5) result = parseInt(_min) + "分钟前";
+                else result = "刚刚";
+                return result;
+            }
+
+            $(".ds-time").html(
+                dateDiff(
+                    ($(".ds-time").attr("data-timestamp") - 0),
+                    (new Date()-0)
+                )
+            );
+        }
+    });
+});

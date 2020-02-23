@@ -1,0 +1,564 @@
+﻿if(document.location.href.indexOf("xinhuanet.com")!=-1 || document.location.href.indexOf("news.cn")!=-1){
+window["_BFD"] = window["_BFD"] || {};
+_BFD.addEvent=function(a,b,c){if(a.addEventListener){a.addEventListener(b,c,false)}else{if(a.attachEvent){a.attachEvent("on"+b,function(){c.call(a)})}else{a["on"+b]=c}}};_BFD.removeEvent=function(a,b,c){if(a.removeEventListener){a.removeEventListener(b,c,false)}else{if(a.detachEvent){a.detachEvent("on"+b,function(){c.call(a)})}else{a["on"+b]=null}}};_BFD.createElement=function(d,a){var c=document.createElement(d);if(a){for(var b in a){if(a.hasOwnProperty(b)){if(b==="class"||b==="className"){c.className=a[b]}else{if(b==="style"){c.style.cssText=a[b]}else{c.setAttribute(b,a[b])}}}}}return c};_BFD.loadScript=function(a,b){setTimeout(function(){var c=_BFD.createElement("script",{src:a,type:"text/javascript"});if(c.readyState){_BFD.addEvent(c,"readystatechange",function(){if(c.readyState==="loaded"||c.readyState==="complete"){if(b){b()}_BFD.removeEvent(c,"readystatechange",arguments.callee)}})}else{_BFD.addEvent(c,"load",function(){if(b){b()}_BFD.removeEvent(c,"load",arguments.callee)})}document.getElementsByTagName("head")[0].appendChild(c)},0)};_BFD.getByAttribute=function(g,h,a){var b=[],a=(a)?a:document,e=a.getElementsByTagName("*"),d=new RegExp("\\b"+h+"\\b","i");for(var c=0;c<e.length;c++){var f=e[c];if(g==="className"||g==="class"){if(d.test(f.className)){b.push(f)}}else{if(f.getAttribute(g)===h){b.push(f)}}}return b};_BFD.getByClass=function(b,a){return _BFD.getByAttribute("className",b,a)};_BFD.getById=function(a){if(typeof a==="string"&&!!a){return document.getElementById(a)}};_BFD.loadCss=function(a){var b=_BFD.createElement("link",{href:a,rel:"stylesheet",type:"text/css"});document.getElementsByTagName("head")[0].appendChild(b)};_BFD.insertAfter=function(d,c){var b=c.parentNode;if(b.lastChild==c){b.appendChild(d)}else{var a=c.nextElementSibling||c.nextSibling;b.insertBefore(d,a)}};
+//banner
+_BFD.Banner = function(construct_obj,callback) {
+	this.callback = callback;
+	this.positionstr = construct_obj.pos_dom;
+	this.bid = construct_obj.bid;
+	if(construct_obj.json_args){
+		this.json_str = jsontostr(construct_obj.json_args);
+	}else{
+		this.json_str = '{}';
+	}
+	this.div_id = "bfd_" + construct_obj.bid;
+	this.div_class_name = "bfd_border";
+	function jsontostr(json) {
+		var s = [];
+		for (var key in json) {
+			s.push('"' + key + '":"' + json[key] + '"');
+		}
+		return '{' + s.join(",") + '}';
+	}
+};
+//处理回调结果
+_BFD.handleResults = function(banners, json) {
+	function getCookie(name){
+		var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)");
+		if(arr=document.cookie.match(reg))
+		return unescape(arr[2]);
+		else
+		return null;
+	}
+	var bfdgid = getCookie("bfd_g");
+	if(json.length > 0) {
+		var rec_results = json;
+		var banner = banners[0];
+		try{
+			if(_BFD.BFD_INFO.page_type == "channel" && (_BFD.BFD_INFO.channel_name == "11116" || _BFD.BFD_INFO.channel_name == "11136" || _BFD.BFD_INFO.channel_name == "11119" || _BFD.BFD_INFO.channel_name == "11120")){
+				if(bfdgid == "87205254007bf952000062fc00016bae58f86f22" || bfdgid == "87205254007bf95200000179000c92ce59241a5d"
+					|| bfdgid == "87205254007bf952000062fc0000901358dcd1a7" || bfdgid == "87205254007bf952000001bb0019200759264c94"
+					|| bfdgid == "87205254007bf952000062fe0008799a590af47d" || bfdgid == "87205254007bf952000062fc000c945f5913b7dd"
+					|| bfdgid == "87205254007bf952000028bc0000021058c252cf"	|| bfdgid == "87205254007bf952000028b80000071958c250a9"
+					|| bfdgid == "87205254007bf9520000641400015b4d5927ee43" || bfdgid == "87205254007bf952000028bc0000020258c24fcb" 
+					|| bfdgid == "87205254007bf952000063af0006880f592fb0a1" || bfdgid == "87205254007bf952000063000000e91358f9dea1"
+					|| bfdgid == "87205254007bf952000001bb0015220e5923af45" || bfdgid == "87205254007bf952000063af002f27ab596db1d4"
+					|| bfdgid == "87205254007bf952000063af0024e7c65959e0ef" || bfdgid == "87205254007bf952000063ab0038195d597055e8"
+					|| bfdgid == "87205254007bf952000064140054df285987f887" || bfdgid == "88e1782bcb64b8300001347b000000025987e0d3"
+					|| bfdgid == "87205254007bf952000064150086f09e598bc8ad" || bfdgid == "87205254007bf95200006415012030f559fab6ca"
+                                        || bfdgid == "87205254007bf952000064150098f891599a585f" || bfdgid == "87205254007bf952000062ff0000139a58d473ac"
+					|| bfdgid == "87205254007bf9520000641400cba5b35a14da84" || bfdgid == "87205254007bf952000063ab00431277598809b0"
+					|| bfdgid == "87205254007bf952000001bb0006e8ed591911be" || bfdgid == "87205254007bf952000063ab003c2d9f597aea92"
+					|| bfdgid == "87205254007bf9520000641600b4d2645a14db06" || bfdgid == "87205254007bf9520000641400c4fc1c5a0a3754"
+					|| bfdgid == "87205254007bf95200006414008e910e59c85029" || bfdgid == "87205254007bf9520000641501379fe25a14dbbf"
+					|| bfdgid == "87205254007bf952000062fe000f1cf2590fde8c" || bfdgid == "87205254007bf952000063ab009e5fff5a14e1bf"
+					|| bfdgid == "87205254007bf952000063ab009fe3145a177a22" || bfdgid == "87205254007bf9520000641501522c3f5a27495f"
+					|| bfdgid == "87205254007bf9520000641400ec6b815a372276" || bfdgid == "87205254007bf9520000641500c46d3959b8e7e0"
+					|| bfdgid == "87205254007bf9520000641600aa302c5a01421b" || bfdgid == "87205254007bf952000077350000057b58bf6078"
+					|| bfdgid == "87205254007bf95200005f80014243455c0491f9" || bfdgid == "87205254007bf95200005f7e00aabeb35b70e423"){
+					if(rec_results.length == 4){
+						var rec_result = rec_results[3];
+					}else if(rec_results.length == 3){
+						var rec_result = rec_results[2];
+					}
+					
+				}else{
+					var rec_result = [];
+				}
+			}else if(_BFD.BFD_INFO.page_type == "channel" && (_BFD.BFD_INFO.channel_name == "11134" || _BFD.BFD_INFO.channel_name == "1197" || _BFD.BFD_INFO.channel_name == "11192"  || _BFD.BFD_INFO.channel_name == "1198" || _BFD.BFD_INFO.channel_name == "11257" || _BFD.BFD_INFO.channel_name == "11130" || _BFD.BFD_INFO.channel_name == "11152" || document.location.href.indexOf("/xxjxs/")!=-1)){
+                            if(rec_results.length == 4){
+								var rec_result = rec_results[3];
+							}else if(rec_results.length == 3){
+								var rec_result = rec_results[2];
+							}
+                        }else{
+				var rec_result = [];
+			}	
+		}catch(e){
+
+		}
+		var req_id = rec_results[2];
+		var banner_id = banner.bid;
+		if(rec_result){
+			try{
+				banner.callback(rec_result, req_id, banner_id);
+			}catch(e){
+
+			}
+		}
+	}
+};
+_BFD.parseBanners = function(prec,banners,_core){
+	var bids = [],reqs = [];
+	for(var i = 0,banner; banner = banners[i++];) {
+		bids.push(banner.bid);
+		if(banner.json_str && banner.json_str.length > 0 && banner.json_str != "{}") {
+			reqs.push( banner.bid + '$' + banner.json_str);
+		} else {
+			reqs.push( banner.bid);
+		}
+	}
+	if(banners.length){
+		prec.bidlst = bids.join("|");
+		prec.req = reqs.join("|");
+		_core.send(prec, function(json) {
+			_BFD.handleResults(banners, json);
+		});
+	}
+}
+
+_BFD.loadScript(('https:' == document.location.protocol?'https://':'http://')+'bd.xinhuanet.com/bcore_bdi_min.js',function(){
+	//全局变量
+	var _core = new $Core(function(){});
+	var Tools = $Core.tools.Tools;
+	//设置客户id
+	_core.options.cid = _BFD.client_id;
+	//设置uid
+	_core.options.uid = _BFD.BFD_USER.user_id;
+	if(typeof(_core.options.uid) == 'undefined' || _core.options.uid == '' || _core.options.uid == '0' || _core.options.uid == null) {
+		_core.options.uid = _core.options.sid;
+	}
+	//设置appkey 和 发送请求端口地址
+	_core.options.appkey = "0333404b77b18137ae80579b763fcfe7";
+	//_core.options.appkey = "0333404b77b18137ae80579b763fcfe7";
+	BCore.inputs.Input.prototype.__surl = "http://bd.xinhuanet.com/js/";
+	BCore.recommends.Recommend.prototype.__surl ="http://bd.xinhuanet.com/xhw/2.0/";
+	_core.options.d_s = "pc";	
+	//推荐栏调用方法
+	_BFD.bfd_show = function(data, req_id, banner_id){
+		var banner_vav = _BFD.show_recommended();
+		_BFD.show_template(data,banner_vav,req_id,banner_id);
+	};
+	//绑定feedback
+	_BFD.bind = function(data,pagetype,req_id,banner_id){
+		try{
+			if(_BFD.getByClass("guessLike")[0]){
+				var recul1 = _BFD.getByClass("guessLike")[0];
+				if(recul1){
+				//发送DFeedBack请求
+					BCore.exts.BannerShow.prototype.push(recul1,banner_id,function(dfd){
+						var ids = []
+							for(var i=0;i<data.length;i++){
+								if(data.length>i){
+									ids.push(data[i].iid);
+								}else{
+									ids = "";
+								}
+							}
+						dfd.iids = ids;
+						dfd.rid = req_id;
+					});
+				}
+			}	
+		}catch(e){
+
+		}
+		try{
+			var _a = recul1.getElementsByTagName('a');
+			for(var j = 0;j<_a.length;j++){
+				_BFD.addEvent(_a[j],"click",(function(x,iid){
+					return function (){
+						new BCore(function(){
+							var fb = new $Core.inputs.FeedBack(req_id);
+							fb.p_on = x + 1;
+							fb.p_bid = banner_id;
+							fb.iid = iid;
+							this.send(fb);
+						});
+					}
+				})(j, data[j].iid));
+			}
+		}catch(e){
+
+		}
+	}
+	//点赞事件
+	_BFD.TrackEvent = function (name,iid){
+		var track = new BCore.inputs.Input("TrackEvent");		
+		track_event.name = name;
+		track_event.iid = iid;
+		_core.send(track_event);
+	}
+	//_BFD.Banner({pos_dom:"希望推荐栏展示的位置", bid:"推荐栏ID", json_args:推荐栏参数 {"key":"value","key":"value"},推荐栏的回调方法})，例：new _BFD.Banner({pos_dom:"", bid:"111111", json_args:{"num":"6"}},_BFD.bfd_show_bab)
+	_BFD['banners'] = {
+		"hp" : [
+			//new _BFD.Banner({pos_dom:"", bid:"111111", json_args:{}},_BFD.bfd_show)
+		], 
+		"dt" : [
+			//new _BFD.Banner({pos_dom:"", bid:"A1495009312228", json_args:{}},_BFD.chlBanner)
+		],
+		"chl" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1495009312228", json_args:{}},_BFD.chlBanner)
+		],
+		"chl1" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1502710085120", json_args:{}},_BFD.chlBanner)
+		],
+		"chl2" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1510559300955", json_args:{}},_BFD.chlBanner)
+		],
+		"chl3" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1510628955502", json_args:{}},_BFD.chlBanner)
+		],
+		"chl4" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1510628864258", json_args:{}},_BFD.chlBanner)
+		],
+		"chl5" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1510629027508", json_args:{}},_BFD.chlBanner)
+		],
+		"chl6" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1510629120323", json_args:{}},_BFD.chlBanner)
+		],
+		"chl7" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1517368222897", json_args:{}},_BFD.chlBanner)
+		],
+		"chl8" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1543805475450", json_args:{}},_BFD.chlBanner)
+		],
+		"chl9" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1543806017684", json_args:{}},_BFD.chlBanner)
+		],
+		"chlxxjxs" : [
+			new _BFD.Banner({pos_dom:"", bid:"A1542695230755", json_args:{}},_BFD.chlBanner)
+			//new _BFD.Banner({pos_dom:"", bid:"A1542695525469", json_args:{}},_BFD.chlBanner),
+			//new _BFD.Banner({pos_dom:"", bid:"A1542695651815", json_args:{}},_BFD.chlBanner)	
+		],
+		"default" : [
+		]
+	}
+	var ExecPageType = (function(){
+		function ExecPageType(){
+			//判断_BFD.BFD_INFO.page_type页面类型
+			if(!_BFD.BFD_INFO){
+                _BFD.BFD_INFO = {page_type:"dft"};
+				this.dft(_core);
+            }else{
+                var method = this[_BFD.BFD_INFO.page_type];
+                if(method && typeof method === "function"){
+                    method.call(this,_core);
+                }else{
+                    this.dft(_core);
+                }
+            }
+		}
+		
+		ExecPageType.prototype = {
+			//首页
+			homepage:function(_core){
+				//设置页面类型
+			﻿	_core.options.p_t = "hp";
+				//发送p.do请求
+				/* if (_BFD['banners']['hp'] && _BFD['banners']['hp'].length>0){
+					var prec = new BCore.recommends.Recommend("P");
+					prec.unq = 1;  //多个推荐栏时，unq值为1时去重
+					_BFD.parseBanners(prec,_BFD['banners']['hp'],_core);
+				} */
+				//发送PageView.do请求
+				//var page_view = new $Core.inputs.PageView();
+				//若有推荐时p_p为rec,否则为空
+                //page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+                //_core.send(page_view);
+			},
+			//列表页
+			list:function(_core){
+				//设置页面类型
+			﻿	_core.options.p_t = "ls";
+			﻿
+				var category = _BFD.BFD_INFO.category;
+				
+				var catid = [];
+				if (category && category instanceof Array) {
+					for (var i=0; i< category.length; i++) {
+						catid.push(category[i][0]);
+					}
+				}
+				
+				if ( category && category.length > 0 ) {
+					var thiscat = category[category.length-1][0];
+					//发送VisitCat.do请求
+					//_core.send(new $Core.inputs.VisitCat(catid.join('$')));
+					//发送AddCat.do请求
+					var add_cat = new $Core.inputs.AddCat(thiscat);
+					add_cat.url = category[category.length-1][1];
+					var cat_tree = category.concat();
+					cat_tree.pop();
+					add_cat.ptree = new $Core.inputs.JObject().toString(cat_tree);
+					_core.send(add_cat);
+				}
+				//发送PageView.do请求
+				//var page_view = new $Core.inputs.PageView();
+                //page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+                //_core.send(page_view);
+			
+			},
+			//单品详情页
+			detail:function(_core){
+				//设置页面类型
+			﻿	_core.options.p_t = "dt";
+			
+				function transdate(postTime){
+					var date=new Date();
+					date.setFullYear(postTime.substring(0,4));
+					date.setMonth(postTime.substring(5,7)-1);
+					date.setDate(postTime.substring(8,10));
+					date.setHours(postTime.substring(11,13));
+					date.setMinutes(postTime.substring(14,16));
+					date.setSeconds(postTime.substring(17,19));
+					return Date.parse(date)/1000;
+				}
+			﻿	
+				if(!_BFD.BFD_INFO.iid){
+					_BFD.BFD_INFO.iid = $("meta[name='pageid']").attr("content").split(".")[11];
+				}
+				
+				
+				//此处获取页面回传的值
+				var id = _BFD.BFD_INFO.iid;
+				//var url = _BFD.BFD_INFO.url;
+				var url = document.location.href;
+				var title = _BFD.BFD_INFO.title;
+				var ptime = _BFD.BFD_INFO.ptime;
+				ptime = transdate(ptime);
+				var vcnt = _BFD.BFD_INFO.vcnt;
+				var source = _BFD.BFD_INFO.source;
+				var typ = _BFD.BFD_INFO.typ;
+				var author = _BFD.BFD_INFO.author;
+				var category = _BFD.BFD_INFO.cat;
+				var attr = _BFD.BFD_INFO.attr;
+				var tag = _BFD.BFD_INFO.tag;
+				var pic = _BFD.BFD_INFO.pic;
+				var ccnt = _BFD.BFD_INFO.ccnt;
+				var abs = _BFD.BFD_INFO.abs;
+				var loc = _BFD.BFD_INFO.loc;
+				
+				var isRec = (function(){
+					//该文章是否被推荐，如推荐返回true，不推荐返回false
+					return true;
+				})();
+			﻿	//发送visit.do请求
+				//_core.send(new BCore.inputs.Visit(id));
+				var visit = new $Core.inputs.Visit(id);
+				visit.bt = BCore.pv.collector.bt();
+				visit.ot = BCore.pv.collector.ot();
+                _core.send(visit);
+				var catid = [];
+				if (category && category instanceof Array) {
+					for (var i=0; i< category.length; i++) {
+						catid.push(category[i][0]);
+					}
+				}else{
+					catid.push(category);
+				}
+				if(!isRec){
+					//发送下架请求
+					_core.send(new $Core.inputs.RmItem(id));
+				}else{
+					//发送additem.do请求
+					var add_item = new $Core.inputs.AddItem(id);
+					add_item.url = url;
+					add_item.title = title;
+					add_item.ptime = ptime;
+					add_item.vcnt = parseInt(vcnt);
+					add_item.source = source;
+					add_item.typ = typ;
+					add_item.author = author;
+					add_item.cat = catid;
+					//add_item.attr = attr;
+					add_item.tag = tag;
+					add_item.pic = pic;
+					add_item.ccnt = parseInt(ccnt);
+					add_item.abs = abs;
+					add_item.loc = loc;
+					_core.send(add_item);
+				}
+				if(catid.length > 0){
+					var cat = catid[catid.length-1];
+					//发送VisitCat.do请求
+					//_core.send(new $Core.inputs.VisitCat(catid.join('$')));
+					//发送AddCat.do请求
+					// var add_cat = new $Core.inputs.AddCat(cat);
+					// if( category.length > 0){
+					// 	add_cat.url = category[category.length-1][1];
+					// 	var cat_tree = category.concat();
+					// 	cat_tree.pop();
+					// 	add_cat.ptree = new $Core.inputs.JObject().toString(cat_tree);
+					// 	//_core.send(add_cat);
+					// }
+				}
+				//发送PageView.do请求
+				//var page_view = new $Core.inputs.PageView();
+                //page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+                //_core.send(page_view);
+				//发送addcart请求，点击加入购物车时调用
+				_BFD.AddCart = function (item_id,price,num){
+					item_id = item_id.toString();
+					price = parseFloat(price);
+					num = parseInt(num);
+					var add_cart = new $Core.inputs.AddCart();			
+					add_cart.push({"i":item_id,"p":price,"n":num});
+					_core.send(add_cart);
+				}
+				
+				
+				
+			},
+			//搜索结果页
+			search:function(_core){
+			﻿	//设置页面类型
+				_core.options.p_t = "sr";
+			﻿	//获取回传值
+				var search_word = _BFD.BFD_INFO.search_word;
+				var search_result = _BFD.BFD_INFO.search_result;
+				//发送Search.do请求
+			﻿	var search = new $Core.inputs.Search(search_word);
+				search.emp = search_result;
+				_core.send(search);
+				//发送PageView.do请求
+			﻿	//var page_view = new $Core.inputs.PageView();
+				//page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+				//_core.send(page_view);
+			},
+			//会员页
+			account:function(_core){
+			﻿	//设置页面类型
+				_core.options.p_t = "ap";
+			﻿	//发送PageView.do请求
+				//var page_view = new $Core.inputs.PageView();
+				//page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+				//_core.send(page_view);
+			},
+			//频道页
+			channel:function(_core){
+			﻿	//设置页面类型
+				_core.options.p_t = "chl";
+				if (_BFD['banners']['chl'] && _BFD['banners']['chl'].length>0 && _BFD.BFD_INFO.channel_name == "11116"){
+					//var prec = new BCore.recommends.Recommend("A1449540463450");
+					var prec = new BCore.recommends.Recommend("A1495009312228");
+					prec.unq = 1;
+					//prec.sid= "253860049";
+					//prec.p_bid= "A1449540463450";
+					prec.p_bid= "A1495009312228";
+					_BFD.parseBanners(prec,_BFD['banners']['chl'],_core);
+				}
+				if (_BFD['banners']['chl1'] && _BFD['banners']['chl1'].length>0 &&(_BFD.BFD_INFO.channel_name == "11152" || _BFD.BFD_INFO.channel_name == "11257")){
+					//var prec = new BCore.recommends.Recommend("A1449540463450");
+					var prec = new BCore.recommends.Recommend("A1502710085120");
+					prec.unq = 1;
+					//prec.sid= "253860049";
+					//prec.p_bid= "A1449540463450";
+					prec.p_bid= "A1502710085120";
+					_BFD.parseBanners(prec,_BFD['banners']['chl1'],_core);
+				}
+				if (_BFD['banners']['chl2'] && _BFD['banners']['chl2'].length>0 && _BFD.BFD_INFO.channel_name == "11134"){
+					//var prec = new BCore.recommends.Recommend("A1449540463450");
+					var prec = new BCore.recommends.Recommend("A1510559300955");
+					prec.unq = 1;
+					//prec.sid= "253860049";
+					//prec.p_bid= "A1449540463450";
+					prec.p_bid= "A1510559300955";
+					_BFD.parseBanners(prec,_BFD['banners']['chl2'],_core);
+				}
+				if (_BFD['banners']['chl3'] && _BFD['banners']['chl3'].length>0 && _BFD.BFD_INFO.channel_name == "11136"){
+					//var prec = new BCore.recommends.Recommend("A1510628955502");
+					var prec = new BCore.recommends.Recommend("A1510628955502");
+					prec.unq = 1;
+					//prec.sid= "253860049";
+					//prec.p_bid= "A1510628955502";
+					prec.p_bid= "A1510628955502";
+					_BFD.parseBanners(prec,_BFD['banners']['chl3'],_core);
+				}
+				if (_BFD['banners']['chl4'] && _BFD['banners']['chl4'].length>0 && _BFD.BFD_INFO.channel_name == "11119"){
+					//var prec = new BCore.recommends.Recommend("A1510628864258");
+					var prec = new BCore.recommends.Recommend("A1510628864258");
+					prec.unq = 1;
+					//prec.sid= "253860049";
+					//prec.p_bid= "A1510628864258";
+					prec.p_bid= "A1510628864258";
+					_BFD.parseBanners(prec,_BFD['banners']['chl4'],_core);
+				}
+				if (_BFD['banners']['chl5'] && _BFD['banners']['chl5'].length>0 && _BFD.BFD_INFO.channel_name == "11120"){
+					//var prec = new BCore.recommends.Recommend("A1510629027508");
+					var prec = new BCore.recommends.Recommend("A1510629027508");
+					prec.unq = 1;
+					//prec.sid= "253860049";
+					//prec.p_bid= "A1510629027508";
+					prec.p_bid= "A1510629027508";
+					_BFD.parseBanners(prec,_BFD['banners']['chl5'],_core);
+				}
+				if (_BFD['banners']['chl6'] && _BFD['banners']['chl6'].length>0 && _BFD.BFD_INFO.channel_name == "11130"){
+					//var prec = new BCore.recommends.Recommend("A1510629120323");
+					var prec = new BCore.recommends.Recommend("A1510629120323");
+					prec.unq = 1;
+					prec.p_bid= "A1510629120323";
+					_BFD.parseBanners(prec,_BFD['banners']['chl6'],_core);
+				}
+				if (_BFD['banners']['chl7'] && _BFD['banners']['chl7'].length>0 && _BFD.BFD_INFO.channel_name == "1197"){
+					var prec = new BCore.recommends.Recommend("A1517368222897");
+					prec.unq = 1;
+					prec.p_bid= "A1517368222897";
+					_BFD.parseBanners(prec,_BFD['banners']['chl7'],_core);
+				}
+				if (_BFD['banners']['chl8'] && _BFD['banners']['chl8'].length>0 && _BFD.BFD_INFO.channel_name == "1198"){
+					var prec = new BCore.recommends.Recommend("A1543805475450");
+					prec.unq = 1;
+					prec.p_bid= "A1543805475450";
+					_BFD.parseBanners(prec,_BFD['banners']['chl8'],_core);
+				}
+				if (_BFD['banners']['chl9'] && _BFD['banners']['chl9'].length>0 && _BFD.BFD_INFO.channel_name == "11192"){
+					var prec = new BCore.recommends.Recommend("A1543806017684");
+					prec.unq = 1;
+					prec.p_bid= "A1543806017684";
+					_BFD.parseBanners(prec,_BFD['banners']['chl9'],_core);
+				}
+				if (_BFD['banners']['chlxxjxs'] && _BFD['banners']['chlxxjxs'].length>0 && document.location.href.indexOf("/xxjxs/")!=-1){
+					var prec = new BCore.recommends.Recommend("A1542695230755");
+					prec.unq = 1;
+					prec.p_bid= "A1542695230755";
+					_BFD.parseBanners(prec,_BFD['banners']['chlxxjxs'],_core);
+				}
+			﻿	//发送PageView.do请求
+				//var page_view = new $Core.inputs.PageView();
+				//page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+				//_core.send(page_view);
+			},
+			//登录成功页
+			login:function(_core){
+			﻿	//设置页面类型
+				_core.options.p_t = "dft";
+			﻿	//发送PageView.do请求
+				//var page_view = new $Core.inputs.PageView();
+				//page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+				//_core.send(page_view);
+			},
+			//注册成功页
+			register:function(_core){
+			﻿	//设置页面类型
+				_core.options.p_t = "dft";
+			﻿	//发送PageView.do请求
+				//var page_view = new $Core.inputs.PageView();
+				//page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+				//_core.send(page_view);
+			},
+			//默认页
+            dft:function(_core) {
+				//设置页面类型
+                _core.options.p_t = "dft";
+				//发送PageView.do请求
+                //var page_view = new $Core.inputs.PageView();
+                //page_view.p_p = "no_rec";
+				//page_view.p_s = document.title;
+                //_core.send(page_view);
+            }
+		}
+		return ExecPageType;
+	})();
+	new ExecPageType();
+});
+}

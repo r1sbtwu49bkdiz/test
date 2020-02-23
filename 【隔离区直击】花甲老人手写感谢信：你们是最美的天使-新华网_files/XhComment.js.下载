@@ -1,0 +1,693 @@
+/**
+ * 评论组件
+ * doc http://www.xinhuanet.com/global/public/XhComment/doc.html
+ * author 蓝鼻子的驯鹿
+ * build 2018-01-25
+ * Contact 523786040@qq.com
+ */
+(function (root, factory) {
+	if (typeof define === 'function' && define.amd) {
+		define(['$'], factory);
+	} else if (typeof exports === 'object') {
+		module.exports = factory($);
+	} else {
+		var XHW = window.XHW = window.XHW || {};
+		XHW.XhComment = XHW.XhComment||factory(window.Zepto || window.jQuery || $);
+	}
+})(this, function ($) {
+	function XhComment(_opt){
+		var _config;
+		_opt=_opt||{};
+		_config={
+			// debug:false,
+			// serviceCode:'xhxwpl',
+			// servicePwd:'n4u1J39N',
+			style:'default',
+			onInit:null,
+			onRenderListFirst:null,
+			onRenderListBefore:null,
+			onRenderListAfter:null,
+			onRenderFormBefore:null,
+			onRenderFormAfter:null,
+			onRenderReplyBefore:null,
+			onRenderReplyAfter:null,
+			listDisabled:false,
+			formDisabled:false,
+			replyDisabled:false,
+			listReplyDisabled:false,
+			formData:null,
+			listMore:false,
+			pageBar:false,
+			loginComment:true,
+			pageBtnNum:5,
+			requestType:'jsonp',
+			commentSize:5,
+			commentPage:0,
+			comboChar:'-',
+			sourceId:1,
+			siteId:1
+		};
+		_language={
+			pageFirstBtn:'首页',
+			pageLastBtn:'末页',
+			pagePrevBtn:'上一页',
+			pageNextBtn:'下一页',
+			loginBtn:'登录',
+			regBtn:'注册',
+			loginTip:'请先登录或注册',
+			weeksAgo:'周前',
+			weeksAgo:'周前',
+			daysAgo:'天前',
+			hoursAgo:'小时前',
+			minutesAgo:'分钟前',
+			secondAgo:'秒前',
+			statusLoadingTip:'加载中...',
+			noCommentTip:'暂无评论',
+			moreTip:'点击加载更多',
+			placeholder:'请发表观点',
+			successTip:'发送成功，请等待审核！',
+			warningTip:'难道您不想说些什么？',
+			replyBtn:'回复',
+			submitBtn:'发　送'
+		};
+		_language=$.extend(_language,_opt.language);
+		_config=$.extend(_config,_opt);
+		this.config=_config;
+		this.language=_language;
+		this.init();
+	}
+	XhComment.instantiate={};
+	XhComment.userInfo=null;
+	XhComment.login=function(_user){
+		for(var _key in XhComment.instantiate){
+			XhComment.instantiate[_key].setUserInfo(_user);
+		}
+	};
+	XhComment.logout=function(){
+		for(var _key in XhComment.instantiate){
+			XhComment.instantiate[_key].clearUserInfo();
+		}
+	};
+	XhComment.prototype={
+		constructor:XhComment,
+		init:function(_config){
+			var _t=this;
+			var _language;
+			var _container;
+			var _newsId;
+			var _siteId;
+
+			if(_config){
+				_t.config=$.extend(_t.config,_config);
+				if(_config.language){
+					_t.language=$.extend(_t.language,_config.language);
+				}
+			}
+			_config=_t.config;
+			_language=_t.language;
+
+			if(XhComment.instantiate[_config.container]){
+				return XhComment.instantiate[_config.container];
+			}else{
+				XhComment.instantiate[_config.container]=this;
+			}
+
+			_container=$(_config.container);
+			_newsId=_container.attr('data-newsId')||_config.newsId;
+			_siteId=_container.attr('data-siteId')||_config.siteId;
+			_t.url=$.extend(_t.url||{
+				login:null,
+				reg:null,
+				// checkLogin:'https://user.news.cn',
+				list:'http://comment.home.news.cn/a/newsCommAll.do',
+				// list:'http://comment.home.news.cn/a/newsComm.do',
+				submit:'http://comment.home.news.cn/a/adComment.do',
+				newsInfo:'http://comment.home.news.cn/a/newsInfo.do'
+			},_config.url);
+			_t.elClass=$.extend(_t.elClass||{     
+				status:'xh-comment-status',
+				pageBar:'xh-page-bar',
+				pageBtn:'xh-page-btn',
+				loginBar:'xh-login-bar',
+				loginBtn:'xh-comment-login',
+				regBtn:'xh-comment-reg',
+				replyBtn:'xh-reply-btn',
+				btn:'xh-comment-btn',
+				list:'xh-comment-list',
+				listItem:'xh-comment-item',
+				form:'xh-comment-form',
+				commentTips:'xh-comment-tips',
+				commentSubmit:'xh-comment-submit',
+				commentContent:'xh-comment-content',
+				commentIframe:'xh-comment-iframe',
+				reply:'xh-comment-reply',
+				replyTips:'xh-reply-tips',
+				replySubmit:'xh-reply-submit',
+				replyContent:'xh-reply-content',
+				replyIframe:'xh-reply-iframe',
+				container:'xh-comment'
+			},_config.elClass);
+			_t.template=$.extend(_t.template||{
+				container:'<div class="'+_t.elClass.list+'"></div><div class="'+_t.elClass.status+'"></div><div class="'+_t.elClass.form+'"></div>',
+				listItem:'<div id="commentId{{commentId}}" class="'+_t.elClass.listItem+'" data-commentId="{{commentId}}" data-newsId="{{newsId}}" data-userId="{{userId}}"><div class="pic"><img src="{{userImgUrl}}"/></div><div class="info"><div class="name">{{nickName}}</div><div class="time" data-time="{{commentTime}}">{{time}}</div>{{listItemReply}}<div class="text">{{content}}</div><div class="tool"><a class="'+_t.elClass.replyBtn+'" href="javascript:;">'+_language.replyBtn+'</a></div></div></div>',
+				listItemReply:'<div class="reply">{{listItemReply}}<div class="reply-name">{{nickName}}</div><div class="reply-sequence">{{sequence}}</div><div class="reply-text">{{content}}</div></div>',
+				reply:'<div class="'+_t.elClass.reply+'"><form action="'+_t.url.submit+'" target="replyIframe{{newsId}}" method="POST"><input type="hidden" name="newsId" value="{{newsId}}"><input type="hidden" name="sourceId" value="'+_config.sourceId+'"><input type="hidden" name="type" value="0" /><input type="hidden" name="userId" value="" /><input type="hidden" name="parentId" value="{{parentId}}" /><div class="form-item"><textarea id="replyContent{{newsId}}" class="'+_t.elClass.replyContent+'" name="content" placeholder="'+_language.placeholder+'"></textarea></div><div class="submit-item"><span class="'+_t.elClass.replyTips+'"></span><span class="'+_t.elClass.loginBar+'"><a class="'+_t.elClass.btn+' '+_t.elClass.loginBtn+'" href="javascript:;">'+_language.loginBtn+'</a><a class="'+_t.elClass.btn+' '+_t.elClass.regBtn+'" href="javascript:;">'+_language.regBtn+'</a></span><input type="submit" class="'+_t.elClass.replySubmit+'" value="'+_language.replyBtn+'" /></div></form><iframe id="replyIframe{{newsId}}" class="'+_t.elClass.replyIframe+'" name="replyIframe{{newsId}}" width="0" height="0" frameborder="0" scrolling="no" src=""></iframe></div>',
+				form:'<form action="'+_t.url.submit+'" target="commentIframe{{newsId}}" method="POST"><input type="hidden" name="newsId" value="{{newsId}}"><input type="hidden" name="sourceId" value="'+_config.sourceId+'"><input type="hidden" name="type" value="0" /><input type="hidden" name="userId" value="" /><input type="hidden" name="parentId" value="{{parentId}}" /><div class="form-item"><textarea id="commentContent{{newsId}}" class="'+_t.elClass.commentContent+'" name="content" placeholder="'+_language.placeholder+'"></textarea></div><div class="submit-item"><span class="'+_t.elClass.commentTips+'"></span><span class="'+_t.elClass.loginBar+'"><a class="'+_t.elClass.btn+' '+_t.elClass.loginBtn+'" href="javascript:;">'+_language.loginBtn+'</a><a class="'+_t.elClass.btn+' '+_t.elClass.regBtn+'" href="javascript:;">'+_language.regBtn+'</a></span><input type="submit" class="'+_t.elClass.commentSubmit+'" value="'+_language.submitBtn+'" /></div></form><iframe id="commentIframe{{newsId}}" class="'+_t.elClass.commentIframe+'" name="commentIframe{{newsId}}" width="0" height="0" frameborder="0" scrolling="no" src=""></iframe>'
+			},_config.template);
+			if(_container.get(0) && _newsId){
+				if(_t.template.container){
+					_container.empty();
+					_container.append(_t.template.container);
+				}
+				_container.addClass(_t.elClass.container).addClass(_config.style);
+				_t.el={
+					container:_container,
+					status:$('.'+_t.elClass.status,_container),
+					list:$('.'+_t.elClass.list,_container),
+					form:$('.'+_t.elClass.form,_container)
+				}
+				_t.el.list.on('click','.'+_t.elClass.replyBtn,function(){
+					_t._renderReplyForm($(this).parents('.'+_t.elClass.listItem));
+				});
+				_t.newsId=_newsId;
+				_t.siteId=_siteId;
+				_t.comboId=_siteId+_config.comboChar+_newsId;
+				_t.status=false;
+				_t.runFunction(_t.config.onInit);
+				_t._getNewsInfo();
+			}
+			return _t;
+		},
+		isFunction:function(_fun){
+			return Object.prototype.toString.call(_fun)=='[object Function]';
+		},
+		runFunction:function(_fun){
+			var _t=this;
+			var _argsArray=null;
+			if( _t.isFunction(_fun) ){
+				_argsArray=Array.prototype.slice.call(arguments);
+				_argsArray.shift();
+				_fun.apply(_t,_argsArray);
+				return true;
+			}else{
+				return false;
+			}
+		},
+		checkLogin:function(){
+			var _t=this;
+			var _result=false;
+			if(XhComment.userInfo && XhComment.userInfo.userid){
+				_result=true;
+			}
+			return _result;
+		},
+		clearUserInfo:function(){
+			var _t=this;
+			XhComment.userInfo=null;
+			_t._setLogin();
+			return _t;
+		},
+		setUserInfo:function(_data){
+			var _t=this;
+			if(_data && _data.uid){
+				XhComment.userInfo=_data;
+				XhComment.userInfo.userid=true;
+			}
+			_t._setLogin();
+			return _t;
+		},
+		getUserInfo:function(_callback){
+			var _t=this;
+			// var _config=_t.config;
+			// var _time = _t._formatDate(undefined,'yyyyMMddhhmmss');
+			// var _sign = hex_md5(_config.serviceCode+_config.servicePwd+_time);
+			// console.log(_t.url.checkLogin);
+			//SSO登录 //初始化配置
+			// idm.config({
+			// 	debug: _config.debug, // 开启调试模式,调用的所有api的返回值会在客户端alert
+			// 	url: _t.url.checkLogin, // 必填，idm地址
+			// 	servicecode: _config.serviceCode, // 必填，接入代码
+			// 	time:_time,
+			// 	sign: _sign, // 必填，签名
+			// 	success:function(){	// 回调函数（成功）	
+			// 		// alert("idm.config succ！");
+			// 		console.log('idm.config success');
+			// 		idm.user.islogin ({
+			// 			userinfo:true,
+			// 			success:function(_res){	// 回调函数（成功）	
+			// 				console.log('idm.user.islogin success');
+			// 				console.log(_res);
+			// 				idm.user.info({
+			// 					success:function(_result){	// 回调函数（成功）
+			// 						console.log('idm.user.info success');
+			// 						console.log(_result);
+			// 						if(_result && _result.uid){
+			// 							_t.userInfo=_result;
+			// 							_t.userInfo.userid=_result.uid;
+			// 						}
+			// 						_t._setLogin();
+			// 						_t.runFunction(_callback,_result);
+			// 					},
+			// 					fail:function(_result)	{	// 回调函数(失败)
+			// 						console.log('idm.user.info fail');
+			// 						_t._setLogin();
+			// 					}
+			// 				})
+			// 			},
+			// 			fail:function(_res)	{	// 回调函数(失败)// 回调函数（成功）
+			// 				console.log('idm.user.islogin fail');
+			// 				_t._setLogin();
+			// 			}
+			// 		});
+			// 	},
+			// 	fail:function(_res)	{	// 回调函数(失败)
+			// 		console.log('idm.config fail');
+			// 		_t._setLogin();
+			// 	}
+			// });
+
+			// 老登录系统
+			// $.ajax({
+			// 	url:_t.url.checkLogin,
+			// 	data:{
+			// 		sourceId:_config.sourceId
+			// 	},
+			// 	dataType:_config.requestType,
+			// 	success:function(_result){
+			// 		if(_result && _result.code==200 && _result.content && _result.content.userid){
+			// 			_t.userInfo=_result.content;
+			// 		}
+			// 		_t._setLogin();
+			// 		_t.runFunction(_callback,_result);
+			// 	}
+			// });
+			_t._setLogin();
+			return _t;
+		},
+		_setStatus:function(_status){
+			var _t=this;
+			var _config=_t.config;
+			var _language=_t.language;
+			var _newsInfo=_t.newsInfo;
+			_t.status=_status;
+			if(_status=='loading'){
+				_t.el.status.html('<div class="loading">'+_language.statusLoadingTip+'</div>').show();
+			}else{
+				_t.el.status.html('').hide();
+			}
+			if(_status=='free' && !_config.listDisabled && _newsInfo && (_newsInfo.commentFlag==2 || _newsInfo.commentFlag==3)){
+				if(_config.commentCount==0){
+					_t.el.status.html('<div class="none">'+_language.noCommentTip+'</div>').show();
+				}else if(_config.listMore){
+					_t._renderPageBar();
+				}
+			}
+			return _t;
+		},
+		_setLogin:function(){
+			var _t=this;
+			_t.el.loginBar=$('.'+_t.elClass.loginBar,_t.el.container);
+			_t.el.loginBtn=$('.'+_t.elClass.loginBtn,_t.el.container);
+			_t.el.regBtn=$('.'+_t.elClass.regBtn,_t.el.container);
+			if(_t.checkLogin()){
+				_t.el.loginBar.hide();
+			}else{
+				_t.el.loginBtn.off('click').on('click',function(){
+					if(_t.url.login){
+						document.location.href=_t.url.login;
+					}else{
+						idm.user.openlogin ({
+							redirect:true,
+							gourl: window.location.href, // 业务地址：非必填。回调总入口将以sp参数返回
+							extargs: undefined // 扩展参数：非必填。回调将回传
+						});
+					}
+				});
+				_t.el.regBtn.off('click').on('click',function(){
+					if(_t.url.login){
+						document.location.href=_t.url.reg;
+					}else{
+						idm.user.openreg ({
+							redirect:true,
+							gourl: window.location.href, // 业务地址：非必填。回调总入口将以sp参数返回
+							extargs: undefined // 扩展参数：非必填。回调将回传
+						});
+					}
+				});
+				_t.el.loginBar.show();
+			}
+			return _t;
+		},
+		_getNewsInfo:function(){
+			var _t=this;
+			var _config=_t.config;
+			_t._setStatus('loading');
+			$.ajax({
+				url:_t.url.newsInfo,
+				data:{newsId:_t.comboId},
+				dataType:_config.requestType,
+				success:function(_result){
+					_t._setStatus('free');
+					_t.newsInfo=_result;
+					_t.loadList()._renderForm().getUserInfo();
+				}
+			});
+			return _t;
+		},
+		_getListItemReplyHtml:function(_data){
+			var _t=this;
+			var _replyHtml={listItemReply:''};
+			if(!_t.config.listReplyDisabled && _data.parent && _data.parent.length>0){
+				for (var _i=0; _i<_data.parent.length-1; _i++) {
+					_data.parent[_i].sequence=_i+1;
+					_data.parent[_i+1].listItemReply=_t._substitute(_t.template.listItemReply,_data.parent[_i]);
+				};
+				_data.parent[_data.parent.length-1].sequence=_data.parent.length;
+				_data.listItemReply=_t._substitute(_t.template.listItemReply,_data.parent[_data.parent.length-1]);
+			}
+			return _t;
+		},
+		loadList:function(_page){
+			// console.log("loadList");
+			var _t=this;
+			var _config=_t.config;
+			var _newsInfo=_t.newsInfo;
+
+			// console.log(this);
+			if(!_config.listDisabled && (_newsInfo.commentFlag==2 || _newsInfo.commentFlag==3)){
+				if(_page){
+					_page=_page;
+				}else{
+					_page=_config.commentPage;
+					_page++;
+				}
+				// console.log(_t,_page);
+				if(_t.status!='loading' && (_page<=_config.commentPageCount || _page==1)){
+					_t._setStatus('loading');
+
+
+
+					$.ajax({
+						url:_t.url.list,
+						data:{
+							newsId:_t.comboId,
+							pid:_page,
+							pgSize:_config.commentSize
+						},
+						dataType:_config.requestType,
+						success:function(_result){
+							// console.log(_result);
+							_t.runFunction(_t.config.onRenderListBefore,_result);
+							_t.el.list.show();
+							var _data=_result.contentAll;
+							var _html='';
+							var _items=null;
+							if(_data && _data!==''){
+								for(var _i=0; _i<_data.length; _i++){
+									_data[_i].time=_t._getTime(_data[_i].commentTime);
+									_t._getListItemReplyHtml(_data[_i]);
+									_html+=_t._substitute(_t.template.listItem,_data[_i]);
+								}
+								_items=$(_html);
+								if(_config.pageBar){
+									_t.el.list.find('.'+_t.elClass.listItem).remove();
+								}
+								if(_t.el.status.parent('.'+_t.elClass.list).length==0){
+									_t.el.list.append(_items);
+								}else{
+									_items.insertBefore(_t.el.status);
+								}
+								_items.fadeIn('fast');
+							}
+							_config.commentPage=parseInt(_result.currentPage,10);
+							_config.commentPageCount=parseInt(_result.totalPage,10);
+							_config.commentCount=parseInt(_result.totalRows,10);
+							if(_page==_config.commentPageCount && !_config.pageBar){
+								_config.listMore=false;
+							}
+							if(_config.formDisabled || _config.replyDisabled){
+								_items.find('.'+_t.elClass.replyBtn).remove();
+							}
+							_t._setStatus('free');
+							if(_page==1){
+								_t.runFunction(_t.config.onRenderListFirst,_items,_result);
+							}
+							_t.runFunction(_t.config.onRenderListAfter,_items,_result);
+						},
+						complete:function(d){
+							// console.log(d);
+						}
+					});
+				}
+			}else{
+				_t.el.list.hide();
+			}
+			return _t;
+		},
+		_renderForm:function(){
+			var _t=this;
+			var _config=_t.config;
+			var _language=_t.language;
+			var _newsInfo=_t.newsInfo;
+			var _html='';
+			var _name=null;
+			if(!_config.formDisabled && (_newsInfo.commentFlag ==1 || _newsInfo.commentFlag==3)){
+				_t.runFunction(_t.config.onRenderFormBefore);
+				_t.el.form.html(_t._substitute(_t.template.form,{
+					newsId:_t.comboId
+				}));
+				_t.el.commentForm=_t.el.form.find('form');
+				_t.el.commentIframe=_t.el.form.find('.'+_t.elClass.commentIframe);
+				_t.el.commentContent=_t.el.form.find('.'+_t.elClass.commentContent);
+				_t.el.commentSubmit=_t.el.form.find('.'+_t.elClass.commentSubmit);
+				_t.el.commentTips=_t.el.form.find('.'+_t.elClass.commentTips);
+				if(_config.formData){
+					for(_name in _config.formData){
+						_html+='<input type="hidden" name="'+_name+'" value="'+_config.formData[_name]+'" />'
+					}
+					_t.el.commentForm.append(_html);
+				}
+				_t.el.commentForm.on('submit',function(){
+					if(!_config.loginComment || _t.checkLogin()){
+						_t.el.commentSubmit.attr('disabled',true);
+						_t.el.commentContent.val($.trim(_t.el.commentContent.val()));
+						if(_t.el.commentContent.val()==''){
+							_t.el.commentContent.addClass('warning');
+							_t.el.commentTips.html(_language.warningTip).addClass('warning');
+							_t.el.commentSubmit.attr('disabled',false);
+						}else{
+							_t.el.commentTips.html(_language.successTip).removeClass('warning');
+							setTimeout(function(){_t.el.commentContent.val('');},500);
+							setTimeout(function(){
+								_t.el.commentTips.html('');
+								_t.el.commentSubmit.attr('disabled',false);
+							},3000);
+							return true;
+						}
+					}else{
+						_t.el.commentTips.html(_language.loginTip).addClass('warning');
+					}
+					return false;
+				});
+				_t.el.commentContent.on('focus',function(){
+					_t.el.commentContent.removeClass('warning');
+					_t.el.commentTips.html('').removeClass('warning');
+				});
+				_t.runFunction(_t.config.onRenderFormAfter);
+				_t.el.form.fadeIn('fast');
+			}else{
+				_t.el.form.hide();
+			}
+			return _t;
+		},
+		_renderReplyForm:function(_listItem){
+			var _t=this;
+			var _config=_t.config;
+			var _language=_t.language;
+			var _newsInfo=_t.newsInfo;
+			var _html='';
+			var _name=null;
+			_t._removeReplyForm();
+			if(_listItem && !_config.formDisabled && !_config.replyDisabled && (_newsInfo.commentFlag ==1 || _newsInfo.commentFlag==3) && (!_t.el.replyListItem || _t.el.replyListItem.get(0)!==_listItem.get(0))){
+				_t.el.replyListItem=_listItem;
+				_t.runFunction(_t.config.onRenderReplyBefore);
+				_t.el.reply=$(_t._substitute(_t.template.reply,{
+					newsId:_t.comboId,
+					parentId:_t.el.replyListItem.attr('data-commentid')
+				}));
+				_t.el.replyListItem.append(_t.el.reply);
+				_t.el.replyForm=_t.el.reply.find('form');
+				_t.el.replyIframe=_t.el.reply.find('.'+_t.elClass.replyIframe);
+				_t.el.replyContent=_t.el.reply.find('.'+_t.elClass.replyContent);
+				_t.el.replySubmit=_t.el.reply.find('.'+_t.elClass.replySubmit);
+				_t.el.replyTips=_t.el.reply.find('.'+_t.elClass.replyTips);
+				if(_config.formData){
+					for(_name in _config.formData){
+						_html+='<input type="hidden" name="'+_name+'" value="'+_config.formData[_name]+'" />'
+					}
+					_t.el.replyForm.append(_html);
+				}
+				_t.el.replyForm.on('submit',function(){
+					if(!_config.loginComment || _t.checkLogin()){
+						_t.el.replySubmit.attr('disabled',true);
+						_t.el.replyContent.val($.trim(_t.el.replyContent.val()));
+						if(_t.el.replyContent.val()==''){
+							_t.el.replyContent.addClass('warning');
+							_t.el.replyTips.html(_language.warningTip).addClass('warning');
+							_t.el.replySubmit.attr('disabled',false);
+						}else{
+							_t.el.replyTips.html(_language.successTip).removeClass('warning');
+							setTimeout(function(){_t.el.replyContent.val('');},500);
+							setTimeout(function(){
+								_t._removeReplyForm();
+							},3000);
+							return true;
+						}
+					}else{
+						_t.el.replyTips.html(_language.loginTip).addClass('warning');
+					}
+					return false;
+				});
+				_t.el.replyContent.on('focus',function(){
+					_t.el.replyContent.removeClass('warning');
+					_t.el.replyTips.html('').removeClass('warning');
+				});
+				_t._setLogin();
+				_t.runFunction(_t.config.onRenderReplyAfter);
+				_t.el.reply.fadeIn('fast');
+			}else{
+				_t.el.reply=null;
+				_t.el.replyListItem=null;
+				_t.el.replyForm=null;
+				_t.el.replyIframe=null;
+				_t.el.replyContent=null;
+				_t.el.replySubmit=null;
+				_t.el.replyTips=null;
+			}
+			return _t;
+		},
+		_removeReplyForm:function(){
+			var _t=this;
+			_t.el.reply&&_t.el.reply.remove();
+			return _t;
+		},
+		_renderPageBar:function(){
+			var _t=this;
+			var _config=_t.config;
+			var _language=_t.language;
+			var _newsInfo=_t.newsInfo;
+			var _pageBtnHtml='';
+			var _pageBtn=null;
+			var _pageStart;
+			var _pageEnd;
+			if(_config.pageBar){
+				_pageBarHtml='<a class="'+_t.elClass.pageBtn+' xh-page-first" data-page="1" href="javascript:;">'+_language.pageFirstBtn+'</a>';
+				_pageBarHtml+='<a class="'+_t.elClass.pageBtn+' xh-page-prev" data-page="'+(_config.commentPage-1<1?1:_config.commentPage-1)+'" href="javascript:;">'+_language.pagePrevBtn+'</a>';
+				if(_config.commentPageCount<=_config.pageBtnNum){
+					_pageStart=1;
+					_pageEnd=_config.commentPageCount;
+				}else{
+					_pageStart=_config.commentPage-parseInt(_config.pageBtnNum/2,10);
+					_pageStart=_pageStart<1?1:_pageStart;
+					_pageEnd=_pageStart+_config.pageBtnNum-1;
+					_pageEnd=_pageEnd>_config.commentPageCount?_config.commentPageCount:_pageEnd;
+					if(_pageEnd==_config.commentPageCount){
+						_pageStart=_config.commentPageCount-_config.pageBtnNum+1;
+					}
+				}
+				for(var _i=_pageStart; _i<=_pageEnd;_i++){
+					_pageBarHtml+='<a class="'+_t.elClass.pageBtn+' xh-page-num page'+_i+(_i==_config.commentPage?' active':'')+'" data-page="'+_i+'" href="javascript:;">'+_i+'</a>';
+				}
+				_pageBarHtml+='<a class="'+_t.elClass.pageBtn+' xh-page-next" data-page="'+(_config.commentPage+1>_config.commentPageCount?_config.commentPageCount:_config.commentPage+1)+'" href="javascript:;">'+_language.pageNextBtn+'</a>';
+				_pageBarHtml+='<a class="'+_t.elClass.pageBtn+' xh-page-last" data-page="'+_config.commentPageCount+'" href="javascript:;">'+_language.pageLastBtn+'</a>';
+				_t.el.pageBtn=$(_pageBarHtml);
+				_t.el.pageBar=$('<div class="'+_t.elClass.pageBar+'"></div>').append(_t.el.pageBtn);
+				_t.el.pageBtn.on('click',function(){
+					var _page=parseInt($(this).attr('data-page'),10);
+					if(_page){
+						_t.loadList(_page);
+					}
+				});
+				_t.el.status.html(_t.el.pageBar).show();
+			}else{
+				_t.el.more=$('<div class="more">'+_language.moreTip+'</div>');
+				_t.el.more.on('click',function(){
+					_t.loadList();
+				});
+				_t.el.status.html(_t.el.more).show();
+			}
+			return _t;
+		},
+		_substitute:function (_tpl, _data, _type, _reg){
+			var _str = '';
+			_reg=_reg||/\\?\{{2,3}([^{}]+)\}{2,3}/g;
+			if (typeof _tpl != 'string' || !_data){
+				return _tpl;
+			}
+			_str = _tpl.replace(_reg, function(_match, _name){
+				if (_match.charAt(0) === '\\'){
+					return _match.slice(1);
+				}
+				var _arr=_name.split('.');
+				var _value=_data;
+				for(var _i=0; _i<_arr.length; _i++){
+					_value=_value[_arr[_i]];
+					if(_value === undefined || _value === null)
+					{
+						_value = '0';///-----
+						break;
+					}
+				}
+				if(_type == "url"){
+					_value = encodeURIComponent(_value);
+				}
+				return _value;
+			});
+			return _str;
+		},
+		_getTime:function(_date){
+			var _t=this;
+			var _language=_t.language;
+			var _result='';
+			var _time,_now;
+			if(_date){
+				_now=new Date();
+				_time=parseInt((_now.getTime()-_date)/1000,10);
+				if(_time>=2419200){
+					_date=new Date(_date);
+					_result=_t._formatDate(_date);
+				}else if(_time<2419200 && _time>=604800){
+					_result=parseInt(_time/604800,10)+_language.weeksAgo;
+				}else if(_time<604800 && _time>=86400){
+					_result=parseInt(_time/86400,10)+_language.daysAgo;
+				}else if(_time<86400 && _time>=3600){
+					_result=parseInt(_time/3600,10)+_language.hoursAgo;
+				}else if(_time<3600 && _time>=60){
+					_result=parseInt(_time/60,10)+_language.minutesAgo;
+				}else if(_time<60){
+					_time=_time>1?_time:1;
+					_result=_time+_language.secondAgo;
+				}
+			}
+			return _result;
+		},
+		_formatDate:function(_data,_str){
+			_str = _str || 'YYYY-MM-dd hh:mm:ss';
+			_data = _data || new Date();
+			var _o = {
+				"M+": _data.getMonth() + 1, //月份
+				"d+": _data.getDate(), //日
+				"h+": _data.getHours(), //小时
+				"m+": _data.getMinutes(), //分
+				"s+": _data.getSeconds(), //秒
+				"q+": Math.floor((_data.getMonth() + 3) / 3), //季度
+				"S": _data.getMilliseconds() //毫秒
+			};
+			if (/([Y|y]+)/.test(_str)) _str = _str.replace(RegExp.$1, (_data.getFullYear() + '').substr(4 - RegExp.$1.length));
+			for (var _k in _o)
+			if (new RegExp("(" + _k + ")").test(_str)) _str = _str.replace(RegExp.$1, (RegExp.$1.length == 1) ? (_o[_k]) : (('00' + _o[_k]).substr(('' + _o[_k]).length)));
+			return _str;
+		}
+	}
+	return XhComment;
+});
